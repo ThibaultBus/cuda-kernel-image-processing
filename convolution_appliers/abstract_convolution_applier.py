@@ -4,7 +4,7 @@ import numpy as np
 
 
 @dataclasses.dataclass
-class AbstractConvolutionApplier(__metaclass__ = abc.ABCMeta):
+class AbstractConvolutionApplier(abc.ABC):
     """Abstract class for applying a kernel convolution"""
     kernel : np.ndarray
 

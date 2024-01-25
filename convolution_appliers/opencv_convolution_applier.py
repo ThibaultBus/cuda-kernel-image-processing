@@ -1,5 +1,5 @@
 import cv2
-from abstract_convolution_applier import AbstractConvolutionApplier
+from convolution_appliers.abstract_convolution_applier import AbstractConvolutionApplier
 
 
 class OpenCVConvolutionApplier(AbstractConvolutionApplier):

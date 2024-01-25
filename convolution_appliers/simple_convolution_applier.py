@@ -1,6 +1,6 @@
 import numpy as np
 from PIL import Image
-from abstract_convolution_applier import AbstractConvolutionApplier
+from convolution_appliers.abstract_convolution_applier import AbstractConvolutionApplier
 
 class SimpleConvolutionApplier(AbstractConvolutionApplier):
     """A python implementation of a kernel convolution, extremely slow"""
