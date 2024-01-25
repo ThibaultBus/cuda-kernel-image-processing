@@ -14,7 +14,8 @@ class SimpleConvolutionApplier(AbstractConvolutionApplier):
         kernel_size = self.kernel.shape[0]
         kernel_padding = kernel_size // 2
 
-        output_image = np.zeros((image_height-kernel_size+1, image_width-kernel_size+1, 3))
+        # create an output image array, without the borders where the kernel cannot be applied
+        output_image = np.zeros((image_height-kernel_size+1, image_width-kernel_size+1, image_channels))
 
         for i in range(kernel_padding, image_height - kernel_padding - 1):
             for j in range(kernel_padding, image_width - kernel_padding - 1):
