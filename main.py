@@ -1,8 +1,8 @@
 import cv2
 import numpy as np
 
-from opencv_convolution_applier import OpenCVConvolutionApplier
-from simple_convolution_applier import SimpleConvolutionApplier
+from convolution_appliers.opencv_convolution_applier import OpenCVConvolutionApplier
+from convolution_appliers.simple_convolution_applier import SimpleConvolutionApplier
 
 
 kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
