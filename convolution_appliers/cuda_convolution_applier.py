@@ -19,7 +19,8 @@ class CudaConvolutionApplier(AbstractConvolutionApplier):
 
     def apply(self, image_path: str, output_path: str):
         """Apply a kernel filter to an image, returns the time it took to apply the filter"""
-        image = Image.open(image_path)
+        # ensure the image has color channels
+        image = Image.open(image_path).convert("RGB")
 
         # Convert the image to a NumPy array
         input_array = np.array(image, dtype=np.uint8)
@@ -44,7 +45,7 @@ class CudaConvolutionApplier(AbstractConvolutionApplier):
 
         # Measure the time it takes to apply the filter
         start_time = time()
-        
+
         cuda.memcpy_htod(d_input_image, input_array)
         cuda.memcpy_htod(d_kernel, kernel_flat)
 

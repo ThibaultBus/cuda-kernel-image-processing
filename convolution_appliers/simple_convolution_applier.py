@@ -35,7 +35,9 @@ class SimpleConvolutionApplier(AbstractConvolutionApplier):
     
     def apply(self, image_path : str, output_path : str):
         """Apply a kernel filter to an image, returns the time it took to apply the filter"""
-        input_image = Image.open(image_path)
+
+        # Ensure the image has color channels
+        input_image = Image.open(image_path).convert("RGB")
 
         # Convert the image to a NumPy array
         image_array = np.array(input_image)
