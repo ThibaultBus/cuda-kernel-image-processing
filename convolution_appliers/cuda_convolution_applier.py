@@ -12,7 +12,7 @@ class CudaConvolutionApplier(AbstractConvolutionApplier):
     """An CUDA implementation of a kernel convolution, to be tested"""
 
     # Compile kernel
-    mod = SourceModule(open("convolution_appliers/convolution_kernel.cu", "r").read())
+    mod = SourceModule(open("utils/convolution_kernel.cu", "r").read())
 
     # Get functions
     convolution_kernel = mod.get_function("convolve")
@@ -41,11 +41,12 @@ class CudaConvolutionApplier(AbstractConvolutionApplier):
             (height + block_size[1] - 1) // block_size[1],
         )
 
-        cuda.memcpy_htod(d_input_image, input_array)
-        cuda.memcpy_htod(d_kernel, kernel_flat)
 
         # Measure the time it takes to apply the filter
         start_time = time()
+        
+        cuda.memcpy_htod(d_input_image, input_array)
+        cuda.memcpy_htod(d_kernel, kernel_flat)
 
         self.convolution_kernel(
             d_input_image,
@@ -61,9 +62,8 @@ class CudaConvolutionApplier(AbstractConvolutionApplier):
 
         cuda.Context.synchronize()  # Wait for the GPU to finish, to ensure the timing is correct
 
-        end_time = time()
-
         cuda.memcpy_dtoh(output_array, d_output_image)
+        end_time = time()
 
         # print(output_array)
 

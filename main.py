@@ -5,7 +5,12 @@ from convolution_appliers.opencv_convolution_applier import OpenCVConvolutionApp
 from convolution_appliers.cuda_convolution_applier import CudaConvolutionApplier
 from convolution_appliers.simple_convolution_applier import SimpleConvolutionApplier
 
-gaussian_kernel = cv2.getGaussianKernel(3, 0)
+from utils.image_resizer_steps import incremental_image_resize
+from utils.get_output_path import get_output_path
+
+import csv
+
+gaussian_kernel = cv2.getGaussianKernel(9, 0)
 gaussian_kernel_2d = np.outer(gaussian_kernel, gaussian_kernel.T)
 
 kernel = gaussian_kernel_2d
@@ -20,31 +25,45 @@ opencv_convolution_applier = OpenCVConvolutionApplier(kernel)
 cuda_convolution_applier = CudaConvolutionApplier(kernel)
 simple_convolution_applier = SimpleConvolutionApplier(kernel)
 
-def get_output_path(input_path, applier):
-    return input_path.replace("images", "outputs").replace(".", f"_{applier}.")
+images_paths = incremental_image_resize("images/starry_night.jpg", "outputs", 100, 4000, 100)
 
-image_path = "images/starry_night.jpg"
+# open a CSV file to write the results
+with open("results.csv", "w") as csv_file:
+    csv_writer = csv.writer(csv_file)
 
-# benchmark the OpenCVConvolutionApplier
-opencv_time = opencv_convolution_applier.benchmark(image_path, get_output_path(image_path, "opencv"), iterations=5)
+    # write the header
+    csv_writer.writerow(["image_path", "opencv_time", "cuda_time", "simple_time"])
 
-# benchmark the CudaConvolutionApplier
-cuda_time = cuda_convolution_applier.benchmark(image_path, get_output_path(image_path, "cuda"), iterations=5)
+    last_simple_time = 0
 
-# benchmark the SimpleConvolutionApplier, but only once because it's too slow
-#simple_time = simple_convolution_applier.benchmark(image_path, get_output_path(image_path, "simple"), iterations=1)
+    # write the results for each image
+    for image_path in images_paths:
+        # benchmark the OpenCVConvolutionApplier
+        opencv_time = opencv_convolution_applier.benchmark(image_path, get_output_path(image_path, "opencv"), iterations=5)
 
-# print the results in milliseconds
-print(f"OpenCV: {opencv_time * 1000} ms")
-print(f"CUDA: {cuda_time * 1000} ms")
-#print(f"Simple: {simple_time * 1000} ms")
+        # benchmark the CudaConvolutionApplier
+        cuda_time = cuda_convolution_applier.benchmark(image_path, get_output_path(image_path, "cuda"), iterations=5)
 
-print("\n\n")
+        # benchmark the SimpleConvolutionApplier, but stops when it starts to take more than 1 seconds as it would be unplotable on the graph
+        simple_time = 0
+        if last_simple_time < 1.:
+            simple_time = simple_convolution_applier.benchmark(image_path, get_output_path(image_path, "simple"), iterations=5)
+            last_simple_time = simple_time
+        else:
+            simple_time = 0
+        
+        # print the results in milliseconds
+        print(f"OpenCV: {opencv_time * 1000} ms")
+        print(f"CUDA: {cuda_time * 1000} ms")
+        print(f"Simple: {simple_time * 1000} ms")
 
-# How much faster is the CUDA implementation than the OpenCV implementation?
-print(f"CUDA is {opencv_time // cuda_time} times faster than OpenCV")
+        print("\n\n")
 
-# How much faster is the CUDA implementation than the simple implementation?
-#print(f"CUDA is {simple_time // cuda_time} times faster than the simple implementation")
+        # How much faster is the CUDA implementation than the OpenCV implementation?
+        print(f"CUDA is {opencv_time // cuda_time} times faster than OpenCV")
 
+        # How much faster is the CUDA implementation than the simple implementation?
+        print(f"CUDA is {simple_time // cuda_time} times faster than the simple implementation")
 
+        # write the results to the CSV file
+        csv_writer.writerow([image_path, opencv_time, cuda_time, simple_time])
