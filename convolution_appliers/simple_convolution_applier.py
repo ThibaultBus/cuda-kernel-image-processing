@@ -1,6 +1,7 @@
 import numpy as np
 from PIL import Image
 from convolution_appliers.abstract_convolution_applier import AbstractConvolutionApplier
+from time import time
 
 class SimpleConvolutionApplier(AbstractConvolutionApplier):
     """A python implementation of a kernel convolution, extremely slow"""
@@ -25,7 +26,7 @@ class SimpleConvolutionApplier(AbstractConvolutionApplier):
 
                 # apply the kernel to the image patch
                 for channel in range(image_channels):
-                    output_image[i, j, channel] = (self.kernel * image_patch[:, :, channel]).sum()
+                    output_image[i - kernel_padding, j - kernel_padding, channel] = (self.kernel * image_patch[:, :, channel]).sum()
 
         # clip the values to be between 0 and 255
         output_image = np.clip(output_image, 0, 255)
@@ -33,17 +34,24 @@ class SimpleConvolutionApplier(AbstractConvolutionApplier):
         return output_image
     
     def apply(self, image_path : str, output_path : str):
-        """Apply a kernel filter to an image"""
+        """Apply a kernel filter to an image, returns the time it took to apply the filter"""
         input_image = Image.open(image_path)
 
         # Convert the image to a NumPy array
         image_array = np.array(input_image)
 
+        # Measure the time it takes to do the convolution
+        start_time = time()
+
         # Apply the convolution to the image
         convolved_image_array = self.convolve(image_array)
+
+        end_time = time()
 
         # Convert the result back to an image
         output_image = Image.fromarray(convolved_image_array.astype(np.uint8))
 
         output_image.save(output_path)
+
+        return end_time - start_time
 
