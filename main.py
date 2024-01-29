@@ -5,7 +5,7 @@ from convolution_appliers.opencv_convolution_applier import OpenCVConvolutionApp
 from convolution_appliers.cuda_convolution_applier import CudaConvolutionApplier
 from convolution_appliers.simple_convolution_applier import SimpleConvolutionApplier
 
-from utils.image_resizer_steps import incremental_image_resize
+from utils.incremental_image_resize import incremental_image_resize
 from utils.get_output_path import get_output_path
 
 import csv

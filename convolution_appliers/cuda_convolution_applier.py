@@ -11,8 +11,8 @@ from convolution_appliers.abstract_convolution_applier import AbstractConvolutio
 class CudaConvolutionApplier(AbstractConvolutionApplier):
     """An CUDA implementation of a kernel convolution, to be tested"""
 
-    # Compile kernel
-    mod = SourceModule(open("utils/convolution_kernel.cu", "r").read())
+    # Compile kernel with slight optimizations
+    mod = SourceModule(open("utils/convolution_kernel.cu", "r").read(), options=['--use_fast_math', '-O3'])
 
     # Get functions
     convolution_kernel = mod.get_function("convolve")
@@ -20,7 +20,7 @@ class CudaConvolutionApplier(AbstractConvolutionApplier):
     def apply(self, image_path: str, output_path: str):
         """Apply a kernel filter to an image, returns the time it took to apply the filter"""
         # ensure the image has color channels
-        image = Image.open(image_path).convert("RGB")
+        image = Image.open(image_path).convert("RGB") # Possible improvement: support grayscale images, this is just a quick fix, really not optimized
 
         # Convert the image to a NumPy array
         input_array = np.array(image, dtype=np.uint8)
@@ -28,7 +28,7 @@ class CudaConvolutionApplier(AbstractConvolutionApplier):
 
         # Set up parameters for the convolution kernel
         height, width, channels = input_array.shape
-        kernel_size = self.kernel.shape[0]
+        kernel_size = self.kernel.shape[0] # we assume the kernel is a square
         kernel_flat = np.array(self.kernel, dtype=np.float32).flatten()
 
         # Allocate memory on the device and copy data
@@ -41,6 +41,8 @@ class CudaConvolutionApplier(AbstractConvolutionApplier):
             (width + block_size[0] - 1) // block_size[0],
             (height + block_size[1] - 1) // block_size[1],
         )
+        # Used for shared memory, no observable performance difference
+        #shared_mem_size = (block_size[0] + 2 * (kernel_size // 2)) * (block_size[1] + 2 * (kernel_size // 2)) * channels
 
 
         # Measure the time it takes to apply the filter
@@ -59,14 +61,13 @@ class CudaConvolutionApplier(AbstractConvolutionApplier):
             np.int32(kernel_size),
             block=block_size,
             grid=grid_size,
+            #shared=shared_mem_size,
         )
 
         cuda.Context.synchronize()  # Wait for the GPU to finish, to ensure the timing is correct
 
         cuda.memcpy_dtoh(output_array, d_output_image)
         end_time = time()
-
-        # print(output_array)
 
         # Save the result as an image
         output_image = Image.fromarray(output_array)
