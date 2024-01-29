@@ -1,5 +1,4 @@
 import cv2
-import numpy as np
 from convolution_appliers.abstract_convolution_applier import AbstractConvolutionApplier
 from time import time
 
